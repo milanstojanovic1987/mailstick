@@ -20,43 +20,21 @@
   };
 
   ###########################
-  # Tor onion mail relay    #
+  # Mail services           #
   ###########################
-  services.tor = {
+  services.postfix = {
     enable = true;
-    hiddenServices = {
-      mail = {
-        version      = 3;
-        storagePath  = "/persist/tor/hidden_service_mail";
-        mappings = [
-          { target = 25;  source = 2525; }
-          { target = 587; source = 1587; }
-          { target = 993; source = 1993; }
-        ];
-      };
+    config = {
+      myhostname      = "mailstick.local";
+      inet_interfaces = [ "127.0.0.1" ];
+      home_mailbox    = "Maildir/";
     };
   };
 
-  system.activationScripts.torPersist = {
-    text = ''
-      mkdir -p /persist/tor
-      rm -rf /var/lib/tor
-      ln -sf /persist/tor /var/lib/tor
-    '';
+  services.dovecot2 = {
+    enable       = true;
+    mailLocation = "maildir:~/Maildir";
   };
-
-  ###########################
-  # Mail services           #
-  ###########################
-  services.postfix.enable = true;
-  services.postfix.config = {
-    myhostname      = "mailstick.onion";
-    inet_interfaces = [ "127.0.0.1" ];
-    home_mailbox    = "Maildir/";
-  };
-
-  services.dovecot2.enable = true;
-  services.dovecot2.mailLocation = "maildir:~/Maildir";
 
   ###########################
   # User account            #
