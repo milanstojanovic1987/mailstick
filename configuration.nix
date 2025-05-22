@@ -10,9 +10,8 @@
   time.timeZone = "UTC";
 
   ###########################
-  # Bootloader & encryption #
+  # Encrypted data partition#
   ###########################
-
   boot.initrd.luks.devices = {
     data = {
       device = "/dev/disk/by-label/DATA";
@@ -21,19 +20,29 @@
   };
 
   ###########################
-  # Core services           #
+  # Tor onion mail relay    #
   ###########################
-  services.tor.enable = true;
-  services.tor.hiddenServices.mail = {
-    version     = 3;
-    storagePath = "/persist/tor/hidden_service_mail";
-    mappings = [
-      { target = 25;  source = 2525; }
-      { target = 587; source = 1587; }
-      { target = 993; source = 1993; }
+  services.tor = {
+    enable = true;
+    relay.enable = true;
+    relay.onionServices.mail = [
+      { source = 2525; target = 25; }
+      { source = 1587; target = 587; }
+      { source = 1993; target = 993; }
     ];
   };
 
+  system.activationScripts.torPersist = {
+    text = ''
+      mkdir -p /persist/tor
+      rm -rf /var/lib/tor
+      ln -sf /persist/tor /var/lib/tor
+    '';
+  };
+
+  ###########################
+  # Mail services           #
+  ###########################
   services.postfix = {
     enable = true;
     config = {
