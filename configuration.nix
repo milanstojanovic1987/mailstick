@@ -24,12 +24,15 @@
   ###########################
   services.tor = {
     enable = true;
-    relay.enable = true;
-    relay.onionServices.mail = [
-      { source = 2525; target = 25; }
-      { source = 1587; target = 587; }
-      { source = 1993; target = 993; }
-    ];
+    relay = {
+      # Only client-side + hidden-service behavior
+      role = "client";
+      onionServices.mail = [
+        { source = 2525; target = 25; }
+        { source = 1587; target = 587; }
+        { source = 1993; target = 993; }
+      ];
+    };
   };
 
   system.activationScripts.torPersist = {
