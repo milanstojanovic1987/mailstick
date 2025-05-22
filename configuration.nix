@@ -20,12 +20,34 @@
   };
 
   ###########################
+  # Tor onion mail relay    #
+  ###########################
+  services.tor = {
+    enable      = true;
+    extraConfig = ''
+      HiddenServiceDir /persist/tor/hidden_service_mail
+      HiddenServiceVersion 3
+      HiddenServicePort 25 127.0.0.1:2525
+      HiddenServicePort 587 127.0.0.1:1587
+      HiddenServicePort 993 127.0.0.1:1993
+    '';
+  };
+
+  system.activationScripts.torPersist = {
+    text = ''
+      mkdir -p /persist/tor
+      rm -rf /var/lib/tor
+      ln -sf /persist/tor /var/lib/tor
+    '';
+  };
+
+  ###########################
   # Mail services           #
   ###########################
   services.postfix = {
     enable = true;
     config = {
-      myhostname      = "mailstick.local";
+      myhostname      = "mailstick.onion";
       inet_interfaces = [ "127.0.0.1" ];
       home_mailbox    = "Maildir/";
     };
