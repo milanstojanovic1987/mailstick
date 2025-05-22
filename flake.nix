@@ -9,30 +9,37 @@
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import nixpkgs {
+        # for installing packages inside your NixOS modules
+        pkgsFor = import nixpkgs {
           inherit system;
           config.allowUnfree = false;
         };
 
-        stickSystem = pkgs.nixosSystem {
-          system = system;
+        # build the NixOS system (the ISO) via the flake-native entrypoint
+        stickSystem = nixpkgs.lib.nixosSystem {
+          inherit system;
+
+          # make `pkgsFor` available as `pkgs` inside your modules
+          specialArgs = { inherit pkgsFor; };
+
           modules = [
             ({ config, pkgs, ... }: {
-              # 1. Tell nixpkgs which arch we’re on
+              ##########################
+              # 1. arch
               nixpkgs.hostPlatform.system = system;
 
-              # 2. Kernel hardening
+              # 2. kernel hardening
               boot.kernelParams = [
                 "lockdown=confidentiality"
                 "randomize_kstack_offset=on"
                 "panic_on_oops=1"
               ];
 
-              # 3. First-boot provisioning (LUKS + FIDO2)
+              # 3. first-boot provisioning
               systemd.services.mailstick-init = {
-                description = "MailStick first-boot provisioning (LUKS+FIDO2)";
-                wantedBy    = [ "multi-user.target" ];
-                serviceConfig = {
+                description     = "MailStick first-boot provisioning (LUKS+FIDO2)";
+                wantedBy        = [ "multi-user.target" ];
+                serviceConfig   = {
                   Type            = "oneshot";
                   RemainAfterExit = true;
                   ExecStart       = "${pkgs.writeShellScript "init-mailstick" ''
@@ -49,7 +56,7 @@
                 };
               };
 
-              # 4. Tor v3 hidden service + PoW
+              # 4. Tor hidden service
               services.tor = {
                 enable = true;
                 hiddenServices.mail = {
@@ -63,7 +70,7 @@
                 };
               };
 
-              # 5. Postfix (SMTP only)
+              # 5. Postfix
               services.postfix = {
                 enable = true;
                 config = {
@@ -88,7 +95,7 @@
               users.users.mailstick = {
                 isNormalUser          = true;
                 extraGroups           = [ "wheel" ];
-                initialHashedPassword = "";
+                initialHashedPassword = "";  # set later via `passwd`
               };
 
               # 8. Block audio/video
@@ -96,13 +103,14 @@
 
               # 9. Nix settings
               nix.settings = {
-                sandbox                         = true;
-                extra-experimental-features     = [ "nix-command" "flakes" ];
+                sandbox                     = true;
+                extra-experimental-features = [ "nix-command" "flakes" ];
               };
             })
           ];
         };
-      in {
+      in
+      {
         packages.isoImage = stickSystem.config.system.build.isoImage;
       }
     );
