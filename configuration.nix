@@ -24,14 +24,16 @@
   ###########################
   services.tor = {
     enable = true;
-    relay = {
-      # Only client-side + hidden-service behavior
-      role = "client";
-      onionServices.mail = [
-        { source = 2525; target = 25; }
-        { source = 1587; target = 587; }
-        { source = 1993; target = 993; }
-      ];
+    hiddenServices = {
+      mail = {
+        version     = 3;
+        storagePath = "/persist/tor/hidden_service_mail";
+        ports = [
+          { target = 25; source = 2525; }
+          { target = 587; source = 1587; }
+          { target = 993; source = 1993; }
+        ];
+      };
     };
   };
 
