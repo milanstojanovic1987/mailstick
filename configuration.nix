@@ -23,14 +23,14 @@
   # Tor onion mail relay    #
   ###########################
   services.tor = {
-    enable      = true;
-    extraConfig = ''
-      HiddenServiceDir /persist/tor/hidden_service_mail
-      HiddenServiceVersion 3
-      HiddenServicePort 25 127.0.0.1:2525
-      HiddenServicePort 587 127.0.0.1:1587
-      HiddenServicePort 993 127.0.0.1:1993
-    '';
+    enable   = true;
+    settings = {
+      HiddenServiceDir     = "/persist/tor/hidden_service_mail";
+      HiddenServiceVersion = 3;
+      HiddenServicePort    = [ "25 127.0.0.1:2525"
+                               "587 127.0.0.1:1587"
+                               "993 127.0.0.1:1993" ];
+    };
   };
 
   system.activationScripts.torPersist = {
@@ -44,19 +44,15 @@
   ###########################
   # Mail services           #
   ###########################
-  services.postfix = {
-    enable = true;
-    config = {
-      myhostname      = "mailstick.onion";
-      inet_interfaces = [ "127.0.0.1" ];
-      home_mailbox    = "Maildir/";
-    };
+  services.postfix.enable = true;
+  services.postfix.config = {
+    myhostname      = "mailstick.onion";
+    inet_interfaces = [ "127.0.0.1" ];
+    home_mailbox    = "Maildir/";
   };
 
-  services.dovecot2 = {
-    enable       = true;
-    mailLocation = "maildir:~/Maildir";
-  };
+  services.dovecot2.enable       = true;
+  services.dovecot2.mailLocation = "maildir:~/Maildir";
 
   ###########################
   # User account            #
