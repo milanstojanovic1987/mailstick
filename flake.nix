@@ -107,6 +107,7 @@
                 extra-experimental-features = [ "nix-command" "flakes" ];
               };
             })
+          "${pkgsFor}/nixos/modules/installer/cd-dvd/installation-cd.nix"
           ];
         };
       in
