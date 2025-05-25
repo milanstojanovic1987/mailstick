@@ -27,9 +27,11 @@
     settings = {
       HiddenServiceDir     = "/persist/tor/hidden_service_mail";
       HiddenServiceVersion = 3;
-      HiddenServicePort    = [ "25 127.0.0.1:2525"
-                               "587 127.0.0.1:1587"
-                               "993 127.0.0.1:1993" ];
+      HiddenServicePort    = [
+        "25 127.0.0.1:2525"
+        "587 127.0.0.1:1587"
+        "993 127.0.0.1:1993"
+      ];
     };
   };
 
@@ -76,12 +78,31 @@
       ln -sf /persist/postfix    /var/spool/postfix
       ln -sf /persist/dovecot    /var/lib/dovecot
       mkdir -p /home/mailuser/Maildir
+
+      # Persist GPG keyring
+      mkdir -p /persist/gpg
+      chown mailuser:mailuser /persist/gpg
+      ln -sf /persist/gpg       /home/mailuser/.gnupg
     '';
+  };
+
+  ###########################
+  # Make /home ephemeral    #
+  ###########################
+  fileSystems."/home" = {
+    fsType  = "tmpfs";
+    options = [ "size=256M" ];
   };
 
   ###########################
   # Tools & firewall        #
   ###########################
-  environment.systemPackages = with pkgs; [ vim curl git ];
+  environment.systemPackages = with pkgs; [
+    vim
+    curl
+    git
+    alpine
+    gnupg
+  ];
   networking.firewall.enable = true;
 }
