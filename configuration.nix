@@ -20,6 +20,12 @@
   };
 
   ###########################
+  # Boot-loader (USB stick) #
+  ###########################
+  boot.loader.systemd-boot.enable        = true;
+  boot.loader.efi.canTouchEfiVariables   = true;
+
+  ###########################
   # Tor onion mail relay    #
   ###########################
   services.tor = {
