@@ -14,7 +14,7 @@
   ########################################
   boot.initrd.luks.devices = {
     data = {
-      device = "/dev/disk/by-label/DATA";
+      device = "/dev/disk/by-partuuid/1234-ABCD";
       preLVM = true;
     };
   };
