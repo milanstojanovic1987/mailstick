@@ -6,7 +6,7 @@
   ###########################
   imports = [ ];
   system.stateVersion = "23.11";
-  networking.hostName   = "mailstick";
+  networking.hostName = "mailstick";
   time.timeZone         = "UTC";
 
   ########################################
@@ -14,10 +14,18 @@
   ########################################
   boot.initrd.luks.devices = {
     data = {
-      device = "/dev/disk/by-partuuid/1234-ABCD";
-      preLVM = true;
+      device  = "/dev/disk/by-partuuid/1234-ABCD";
+      preLVM  = true;
     };
   };
+
+  #################################
+  # Disable GRUB → use systemd-boot
+  #################################
+  boot.loader.grub.enable                 = false;
+  boot.loader.grub.efiInstallAsRemovable  = false;
+  boot.loader.systemd-boot.enable         = true;
+  boot.loader.efi.canTouchEfiVariables    = true;
 
   ###########################
   # Tor onion mail relay    #
@@ -28,16 +36,15 @@
       HiddenServiceDir     = "/persist/tor/hidden_service_mail";
       HiddenServiceVersion = 3;
       HiddenServicePort    = [
-        "25  127.0.0.1:2525"
+        "25 127.0.0.1:2525"
         "587 127.0.0.1:1587"
       ];
     };
   };
 
   ###########################
-  # Postfix & mail user    #
+  # Postfix & mail user     #
   ###########################
-  # Create the mailuser group & system user
   users.groups.mailuser = { };
   users.users.mailuser = {
     isSystemUser = true;
@@ -45,8 +52,6 @@
     home         = "/var/lib/mail";
     shell        = "/run/current-system/sw/bin/nologin";
   };
-
-  # Ensure /var/spool/postfix exists and owned by mailuser
   systemd.tmpfiles.rules = [
     "d /var/spool/postfix 0755 mailuser mailuser -"
   ];
@@ -55,28 +60,18 @@
   # Filesystems             #
   ###########################
   fileSystems."/" = {
-    device = "/dev/mapper/cryptroot";
+    device = "/dev/mapper/data";
     fsType = "ext4";
   };
   fileSystems."/boot" = {
-    device = "/dev/disk/by-label/BOOT";
+    # we’re using the parted partition label “boot”
+    device = "/dev/disk/by-partlabel/boot";
     fsType = "vfat";
-  };
-
-  ###########################
-  # Bootloader (GRUB)       #
-  ###########################
-  boot.loader.grub = {
-    enable                = true;
-    devices               = [ "/dev/sdc" ];  # ← adjust if your target stick has a different letter
-    efiSupport            = true;            # for removable‐media (UEFI)
-    efiInstallAsRemovable = true;
   };
 
   ###########################
   # Extras                  #
   ###########################
-  # Add any extra packages you need here
   environment.systemPackages = with pkgs; [
     alpine
     mutt
