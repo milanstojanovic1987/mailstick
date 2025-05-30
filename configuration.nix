@@ -32,14 +32,23 @@
   # Tor onion mail relay    #
   ###########################
   services.tor = {
-    enable   = true;
+    enable = true;
+  
+    # (you can remove your previous HiddenServiceDir & HiddenServicePort settings)
     settings = {
-      HiddenServiceDir     = "/persist/tor/hidden_service_mail";
-      HiddenServiceVersion = 3;
-      HiddenServicePort    = [
-        "25 127.0.0.1:2525"
-        "587 127.0.0.1:1587"
-      ];
+      # you can set a DataDirectory if you like, or let it default
+      # DataDirectory = "/var/lib/tor";
+    };
+  
+    hiddenServices = {
+      mail = {
+        directory = "/persist/tor/hidden_service_mail";
+        version   = 3;
+        ports = [
+          { port = 25;  target = "127.0.0.1:2525"; }
+          { port = 587; target = "127.0.0.1:1587"; }
+        ];
+      };
     };
   };
 
