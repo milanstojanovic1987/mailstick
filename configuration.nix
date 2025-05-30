@@ -6,16 +6,17 @@
   ###########################
   imports = [ ];
   system.stateVersion = "23.11";
-  networking.hostName = "mailstick";
-  time.timeZone         = "UTC";
+  networking.hostName    = "mailstick";
+  time.timeZone          = "UTC";
 
   ########################################
   # Encrypted data partition (LUKS root) #
   ########################################
   boot.initrd.luks.devices = {
     data = {
-      device  = "/dev/disk/by-partuuid/1234-ABCD";
-      preLVM  = true;
+      # Use the GPT partition name "DATA" that you created in parted
+      device = "/dev/disk/by-partlabel/DATA";
+      preLVM = true;
     };
   };
 
@@ -64,7 +65,6 @@
     fsType = "ext4";
   };
   fileSystems."/boot" = {
-    # we’re using the parted partition label “boot”
     device = "/dev/disk/by-partlabel/boot";
     fsType = "vfat";
   };
