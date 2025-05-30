@@ -33,17 +33,12 @@
   ###########################
   services.tor = {
     enable = true;
-  
-    # (you can remove your previous HiddenServiceDir & HiddenServicePort settings)
-    settings = {
-      # you can set a DataDirectory if you like, or let it default
-      # DataDirectory = "/var/lib/tor";
-    };
+    dataDirectory = "/persist/tor";       # store all Tor state under /persist
   
     hiddenServices = {
       mail = {
-        directory = "/persist/tor/hidden_service_mail";
         version   = 3;
+        directory = "/persist/tor/hidden_service_mail";
         ports = [
           { port = 25;  target = "127.0.0.1:2525"; }
           { port = 587; target = "127.0.0.1:1587"; }
