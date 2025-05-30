@@ -34,21 +34,15 @@
   services.tor = {
     enable = true;
 
-    # Tell Tor to store all state under /persist/tor
+    # All of these go verbatim into torrc
     settings = {
-      DataDirectory = "/persist/tor";
-    };
-
-    # Built-in NixOS support for hidden services:
-    hiddenServices = {
-      mail = {
-        version   = 3;
-        directory = "/persist/tor/hidden_service_mail";
-        ports = [
-          { port = 25;  target = "127.0.0.1:2525"; }
-          { port = 587; target = "127.0.0.1:1587"; }
-        ];
-      };
+      DataDirectory          = "/persist/tor";
+      HiddenServiceDir       = "/persist/tor/hidden_service_mail";
+      HiddenServiceVersion   = 3;
+      HiddenServicePort      = [
+        "25 127.0.0.1:2525"
+        "587 127.0.0.1:1587"
+      ];
     };
   };
 
@@ -67,13 +61,12 @@
   # Temporary files & dirs  #
   ###########################
   systemd.tmpfiles.rules = [
-    # ensure the mail queue directory
-    "d /var/spool/postfix                           0755 mailuser mailuser -"
-
-    # make /persist and Tor state dirs on boot
-    "d /persist                                     0755 root     root     -"
-    "d /persist/tor                                 0700 tor      tor      -"
-    "d /persist/tor/hidden_service_mail             0700 tor      tor      -"
+    # mail queue
+    "d /var/spool/postfix                    0755 mailuser mailuser -"
+    # persist and Tor state area
+    "d /persist                              0755 root     root     -"
+    "d /persist/tor                          0700 tor      tor      -"
+    "d /persist/tor/hidden_service_mail      0700 tor      tor      -"
   ];
 
   ###########################
