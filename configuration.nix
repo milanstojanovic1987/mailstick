@@ -32,13 +32,12 @@
   ###########################
   services.tor = {
     enable = true;
-
-    # These go straight into torrc:
     settings = {
-      DataDirectory          = "/persist/tor";
-      HiddenServiceDir       = "/persist/tor/hidden_service_mail";
-      HiddenServiceVersion   = 3;
-      HiddenServicePort      = [
+      # Persist all Tor state under /persist/tor
+      DataDirectory        = "/persist/tor";
+      HiddenServiceDir     = "/persist/tor/hidden_service_mail";
+      HiddenServiceVersion = 3;
+      HiddenServicePort    = [
         "25  127.0.0.1:2525"
         "587 127.0.0.1:1587"
       ];
@@ -60,10 +59,9 @@
   # Temporary files & dirs  #
   ###########################
   systemd.tmpfiles.rules = [
-    # mail queue
+    # mail queue directory
     "d /var/spool/postfix                       0755 mailuser mailuser -"
-
-    # ensure /persist and Tor state dirs exist
+    # ensure /persist and Tor data dirs exist on every boot
     "d /persist                                 0755 root     root     -"
     "d /persist/tor                             0700 tor      tor      -"
     "d /persist/tor/hidden_service_mail         0700 tor      tor      -"
