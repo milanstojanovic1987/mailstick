@@ -6,15 +6,15 @@
   ###########################
   imports = [ ];
   system.stateVersion = "23.11";
-  networking.hostName    = "mailstick";
-  time.timeZone          = "UTC";
+  networking.hostName = "mailstick";
+  time.timeZone       = "UTC";
 
   ########################################
   # Encrypted data partition (LUKS root) #
   ########################################
   boot.initrd.luks.devices = {
     data = {
-      # Use the GPT partition name "DATA" that you created in parted
+      # Use the GPT partition label "DATA"
       device = "/dev/disk/by-partlabel/DATA";
       preLVM = true;
     };
@@ -23,18 +23,23 @@
   #################################
   # Disable GRUB → use systemd-boot
   #################################
-  boot.loader.grub.enable                 = false;
-  boot.loader.grub.efiInstallAsRemovable  = false;
-  boot.loader.systemd-boot.enable         = true;
-  boot.loader.efi.canTouchEfiVariables    = true;
+  boot.loader.grub.enable                = false;
+  boot.loader.grub.efiInstallAsRemovable = false;
+  boot.loader.systemd-boot.enable        = true;
+  boot.loader.efi.canTouchEfiVariables   = true;
 
   ###########################
   # Tor onion mail relay    #
   ###########################
   services.tor = {
     enable = true;
-    dataDirectory = "/persist/tor";       # store all Tor state under /persist
-  
+
+    # Tell Tor to store all state under /persist/tor
+    settings = {
+      DataDirectory = "/persist/tor";
+    };
+
+    # Built-in NixOS support for hidden services:
     hiddenServices = {
       mail = {
         version   = 3;
@@ -57,12 +62,18 @@
     home         = "/var/lib/mail";
     shell        = "/run/current-system/sw/bin/nologin";
   };
+
+  ###########################
+  # Temporary files & dirs  #
+  ###########################
   systemd.tmpfiles.rules = [
-    # keep the mail queue dir
-    "d /var/spool/postfix 0755 mailuser mailuser -"
-  
-    # ensure /persist always exists (for Tor’s dataDirectory)
-    "d /persist           0755 root    root    -"
+    # ensure the mail queue directory
+    "d /var/spool/postfix                           0755 mailuser mailuser -"
+
+    # make /persist and Tor state dirs on boot
+    "d /persist                                     0755 root     root     -"
+    "d /persist/tor                                 0700 tor      tor      -"
+    "d /persist/tor/hidden_service_mail             0700 tor      tor      -"
   ];
 
   ###########################
