@@ -58,7 +58,11 @@
     shell        = "/run/current-system/sw/bin/nologin";
   };
   systemd.tmpfiles.rules = [
+    # keep the mail queue dir
     "d /var/spool/postfix 0755 mailuser mailuser -"
+  
+    # ensure /persist always exists (for Tor’s dataDirectory)
+    "d /persist           0755 root    root    -"
   ];
 
   ###########################
