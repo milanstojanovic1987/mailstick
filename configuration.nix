@@ -14,7 +14,6 @@
   ########################################
   boot.initrd.luks.devices = {
     data = {
-      # Use the GPT partition label "DATA"
       device = "/dev/disk/by-partlabel/DATA";
       preLVM = true;
     };
@@ -34,13 +33,13 @@
   services.tor = {
     enable = true;
 
-    # All of these go verbatim into torrc
+    # These go straight into torrc:
     settings = {
       DataDirectory          = "/persist/tor";
       HiddenServiceDir       = "/persist/tor/hidden_service_mail";
       HiddenServiceVersion   = 3;
       HiddenServicePort      = [
-        "25 127.0.0.1:2525"
+        "25  127.0.0.1:2525"
         "587 127.0.0.1:1587"
       ];
     };
@@ -62,11 +61,12 @@
   ###########################
   systemd.tmpfiles.rules = [
     # mail queue
-    "d /var/spool/postfix                    0755 mailuser mailuser -"
-    # persist and Tor state area
-    "d /persist                              0755 root     root     -"
-    "d /persist/tor                          0700 tor      tor      -"
-    "d /persist/tor/hidden_service_mail      0700 tor      tor      -"
+    "d /var/spool/postfix                       0755 mailuser mailuser -"
+
+    # ensure /persist and Tor state dirs exist
+    "d /persist                                 0755 root     root     -"
+    "d /persist/tor                             0700 tor      tor      -"
+    "d /persist/tor/hidden_service_mail         0700 tor      tor      -"
   ];
 
   ###########################
