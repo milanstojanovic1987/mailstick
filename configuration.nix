@@ -33,7 +33,6 @@
   services.tor = {
     enable = true;
     settings = {
-      # Persist all Tor state under /persist/tor
       DataDirectory        = "/persist/tor";
       HiddenServiceDir     = "/persist/tor/hidden_service_mail";
       HiddenServiceVersion = 3;
@@ -59,12 +58,22 @@
   # Temporary files & dirs  #
   ###########################
   systemd.tmpfiles.rules = [
-    # mail queue directory
     "d /var/spool/postfix                       0755 mailuser mailuser -"
-    # ensure /persist and Tor data dirs exist on every boot
     "d /persist                                 0755 root     root     -"
     "d /persist/tor                             0700 tor      tor      -"
     "d /persist/tor/hidden_service_mail         0700 tor      tor      -"
+  ];
+
+  ###########################
+  # Force‐create before Tor  #
+  ###########################
+  systemd.services."tor.service".serviceConfig.ExecStartPre = [
+    # just in case tmpfiles hasn’t run yet, do it here again
+    "mkdir -p /persist/tor/hidden_service_mail"
+    "chown tor:tor /persist/tor"
+    "chown tor:tor /persist/tor/hidden_service_mail"
+    "chmod 0700 /persist/tor"
+    "chmod 0700 /persist/tor/hidden_service_mail"
   ];
 
   ###########################
