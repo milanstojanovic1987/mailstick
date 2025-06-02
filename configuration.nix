@@ -43,6 +43,14 @@
     };
   };
 
+  preStart = ''
+    mkdir -p /persist/tor/hidden_service_mail
+    chown -R tor:tor /persist/tor
+    chmod -R 0700 /persist/tor
+    chmod 0700 /persist/tor/hidden_service_mail
+  '';
+};
+
   ###########################
   # Postfix & mail user     #
   ###########################
@@ -59,9 +67,6 @@
   ###########################
   systemd.tmpfiles.rules = [
     "d /var/spool/postfix                       0755 mailuser mailuser -"
-    "d /persist                                 0755 root     root     -"
-    "d /persist/tor                             0700 tor      tor      -"
-    "d /persist/tor/hidden_service_mail         0700 tor      tor      -"
   ];
 
   ###########################
