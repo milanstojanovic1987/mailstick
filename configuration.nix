@@ -6,8 +6,8 @@
   ###########################
   imports = [ ];
   system.stateVersion = "23.11";
-  networking.hostName = "mailstick";
-  time.timeZone       = "UTC";
+  networking.hostName   = "mailstick";
+  time.timeZone         = "UTC";
 
   ########################################
   # Encrypted data partition (LUKS root) #
@@ -41,15 +41,13 @@
         "587 127.0.0.1:1587"
       ];
     };
+    preStart = ''
+      mkdir -p /persist/tor/hidden_service_mail
+      chown -R tor:tor /persist/tor
+      chmod -R 0700 /persist/tor
+      chmod 0700 /persist/tor/hidden_service_mail
+    '';
   };
-
-  preStart = ''
-    mkdir -p /persist/tor/hidden_service_mail
-    chown -R tor:tor /persist/tor
-    chmod -R 0700 /persist/tor
-    chmod 0700 /persist/tor/hidden_service_mail
-  '';
-};
 
   ###########################
   # Postfix & mail user     #
@@ -89,14 +87,13 @@
     fsType = "ext4";
   };
   fileSystems."/boot" = {
-    device = "/dev/disk/by-partlabel/boot";
+    device = "/dev/disk/by-label/boot";
     fsType = "vfat";
   };
-
-  +fileSystems."/persist" = {
-  +  device = "/dev/disk/by-partlabel/PERSIST";
-  +  fsType  = "ext4";
-  +};
+  fileSystems."/persist" = {
+    device = "/dev/disk/by-partlabel/PERSIST";
+    fsType  = "ext4";
+  };
 
   ###########################
   # Extras                  #
