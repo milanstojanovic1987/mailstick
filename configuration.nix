@@ -64,14 +64,20 @@
   ###########################
   # Force‐create before Tor  #
   ###########################
-  systemd.services."tor.service".serviceConfig.ExecStartPre = [
-    # In case tmpfiles hasn’t run yet, create/own/secure before Tor starts:
-    "mkdir -p /persist/tor/hidden_service_mail"
-    "chown tor:tor /persist/tor"
-    "chown tor:tor /persist/tor/hidden_service_mail"
-    "chmod 0700 /persist/tor"
-    "chmod 0700 /persist/tor/hidden_service_mail"
-  ];
+  systemd.services."tor.service".serviceConfig = {
+    # Ensure /persist is mounted before starting Tor:
+    Requires = [ "persist.mount" ];
+    After    = [ "persist.mount" ];
+
+    # Before Tor’s main ExecStart, create and secure /persist/tor and hidden-service folder
+    ExecStartPre = [
+      "/run/current-system/sw/bin/mkdir -p /persist/tor/hidden_service_mail"
+      "/run/current-system/sw/bin/chown tor:tor /persist/tor"
+      "/run/current-system/sw/bin/chown tor:tor /persist/tor/hidden_service_mail"
+      "/run/current-system/sw/bin/chmod 0700 /persist/tor"
+      "/run/current-system/sw/bin/chmod 0700 /persist/tor/hidden_service_mail"
+    ];
+  };
 
   ###########################
   # Filesystems             #
