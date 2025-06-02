@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   ###########################
@@ -12,8 +12,9 @@
   ###########################
   # Enable Nix Flakes       #
   ###########################
-  # Instead of editing /etc/nix/nix.conf directly (which is read-only at runtime),
-  # we expose the same setting through configuration.nix:
+  # This sets the same flag you would otherwise put in /etc/nix/nix.conf,
+  # enabling both nix-command and flakes. It is safe to leave here even
+  # if you switch back to a non-flake workflow later.
   nix.extraOptions = ''
     experimental-features = nix-command flakes
   '';
@@ -50,6 +51,9 @@
         "587 127.0.0.1:1587"
       ];
     };
+    # We are *not* using `preStart` here, because the Tor module does
+    # not support a `preStart` attribute. Instead, we override the
+    # systemd unit directly below in `systemd.services."tor.service".serviceConfig`.
   };
 
   ###########################
@@ -67,22 +71,28 @@
   # Temporary files & dirs  #
   ###########################
   systemd.tmpfiles.rules = [
+    # Ensure /var/spool/postfix exists:
     "d /var/spool/postfix                       0755 mailuser mailuser -"
   ];
 
   ###########################
   # Force‐create before Tor  #
   ###########################
+  # This override ensures Tor’s unit waits for /persist, then runs all
+  # the `mkdir`, `chown`, and `chmod` commands before starting the Tor daemon.
   systemd.services."tor.service".serviceConfig = {
-    # Don’t start Tor until /persist is mounted:
+    # Tor must not start until /persist is mounted:
     Requires = [ "persist.mount" ];
     After    = [ "persist.mount" ];
 
-    # Before Tor’s main ExecStart, create and secure /persist/tor
+    # Before Tor’s main ExecStart, create & secure /persist/tor
     ExecStartPre = [
+      # Create the hidden‐service folder
       "/run/current-system/sw/bin/mkdir -p /persist/tor/hidden_service_mail"
+      # Change ownership so Tor can write there
       "/run/current-system/sw/bin/chown tor:tor /persist/tor"
       "/run/current-system/sw/bin/chown tor:tor /persist/tor/hidden_service_mail"
+      # Restrict permissions to 0700 (owner read/write/execute only)
       "/run/current-system/sw/bin/chmod 0700 /persist/tor"
       "/run/current-system/sw/bin/chmod 0700 /persist/tor/hidden_service_mail"
     ];
