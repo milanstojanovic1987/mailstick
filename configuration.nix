@@ -41,12 +41,6 @@
         "587 127.0.0.1:1587"
       ];
     };
-    preStart = ''
-      mkdir -p /persist/tor/hidden_service_mail
-      chown -R tor:tor /persist/tor
-      chmod -R 0700 /persist/tor
-      chmod 0700 /persist/tor/hidden_service_mail
-    '';
   };
 
   ###########################
@@ -71,7 +65,7 @@
   # Force‐create before Tor  #
   ###########################
   systemd.services."tor.service".serviceConfig.ExecStartPre = [
-    # just in case tmpfiles hasn’t run yet, do it here again
+    # In case tmpfiles hasn’t run yet, create/own/secure before Tor starts:
     "mkdir -p /persist/tor/hidden_service_mail"
     "chown tor:tor /persist/tor"
     "chown tor:tor /persist/tor/hidden_service_mail"
