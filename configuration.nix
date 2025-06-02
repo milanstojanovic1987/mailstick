@@ -88,6 +88,11 @@
     fsType = "vfat";
   };
 
+  +fileSystems."/persist" = {
+  +  device = "/dev/disk/by-partlabel/PERSIST";
+  +  fsType  = "ext4";
+  +};
+
   ###########################
   # Extras                  #
   ###########################
