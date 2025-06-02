@@ -9,6 +9,15 @@
   networking.hostName   = "mailstick";
   time.timeZone         = "UTC";
 
+  ###########################
+  # Enable Nix Flakes       #
+  ###########################
+  # Instead of editing /etc/nix/nix.conf directly (which is read-only at runtime),
+  # we expose the same setting through configuration.nix:
+  nix.extraOptions = ''
+    experimental-features = nix-command flakes
+  '';
+
   ########################################
   # Encrypted data partition (LUKS root) #
   ########################################
@@ -65,11 +74,11 @@
   # Force‐create before Tor  #
   ###########################
   systemd.services."tor.service".serviceConfig = {
-    # Ensure /persist is mounted before starting Tor:
+    # Don’t start Tor until /persist is mounted:
     Requires = [ "persist.mount" ];
     After    = [ "persist.mount" ];
 
-    # Before Tor’s main ExecStart, create and secure /persist/tor and hidden-service folder
+    # Before Tor’s main ExecStart, create and secure /persist/tor
     ExecStartPre = [
       "/run/current-system/sw/bin/mkdir -p /persist/tor/hidden_service_mail"
       "/run/current-system/sw/bin/chown tor:tor /persist/tor"
