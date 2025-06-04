@@ -22,6 +22,8 @@
           ./configuration.nix
           # Adds the bootable ISO builder
           "${nixpkgs}/nixos/modules/installer/cd-dvd/iso-image.nix"
+          # Resolve GRUB conflict: ISO uses systemd-boot, not GRUB
+          ({ lib, ... }: { boot.loader.grub.enable = lib.mkForce false; })
         ];
       };
     in
