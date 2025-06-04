@@ -8,18 +8,21 @@
   outputs = { self, nixpkgs }:
     let
       system = "x86_64-linux";
-
-      # Top-level helper; note **nixpkgs.lib**, not pkgs.lib
-      base = nixpkgs.lib.nixosSystem {
+    in
+    {
+      nixosConfigurations.mailstick-vbox = nixpkgs.lib.nixosSystem {
         inherit system;
+        # <- hand the pinned nixpkgs path to the module system
+        specialArgs = { inherit nixpkgs; };
         modules = [ ./configuration.nix ];
       };
-    in {
-      nixosConfigurations.mailstick-vbox = base;
 
       packages.${system} = {
-        isoImage = base.config.system.build.isoImage;
-        vmImage  = base.config.system.build.vmImage;
+        isoImage = self.nixosConfigurations.mailstick-vbox
+          .config.system.build.isoImage;
+
+        vmImage = self.nixosConfigurations.mailstick-vbox
+          .config.system.build.vmImage;
       };
     };
 }
