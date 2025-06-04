@@ -13,6 +13,12 @@
 
   fileSystems."/" = { options = [ "noatime" "discard" ]; };
 
+  fileSystems."/var/lib/tor" = {
+    device = "/persist/tor";
+    fsType = "none";
+    options = [ "bind" ];
+  };
+
   networking.hostName = "mailstick-vbox";
   networking.useDHCP  = true;
   networking.firewall.enable          = true;
@@ -22,25 +28,22 @@
   services.tor = {
     enable        = true;
     client.enable = true;
-    relay.enable  = false;
+    relay.enable  = true;
     enableGeoIP   = false;
 
     relay.onionServices = {
       mailstick = {
         version = 3;
         map = [
-          { port = 25;
-            target.addr = "127.0.0.1";
-            target.port = 2525;
-          }
+          { port = 25; target.addr = "127.0.0.1"; target.port = 2525; };
+          { port = 587; target.addr = "127.0.0.1"; target.port = 1587; };
         ];
       };
     };
 
-    settings = { ExitPolicy = [ "reject *:*" ]; };
+    relay.exitPolicy = [ "reject *:*" ];
 
-    openFirewall    = false;
-    torsocks.enable = true;
+    programs.torsocks.enable = true;
   };
 
   systemd.services."tor.service".serviceConfig = {
