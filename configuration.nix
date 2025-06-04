@@ -8,7 +8,7 @@
 
   imports = [
     ./hardware-configuration.nix
-    "${pkgs.path}/nixos/modules/profiles/hardened.nix"
+    "${nixpkgs}/nixos/modules/profiles/hardened.nix"
   ];
 
   ############################################
