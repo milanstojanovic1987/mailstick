@@ -40,7 +40,7 @@
 
     firewall = {
       enable          = true;
-      allowedTCPPorts = [ 2525 1587 ];   # open local SMTP submission ports
+      allowedTCPPorts = [ 2525 1587 ];   # local SMTP submission
       allowedUDPPorts = [ ];
     };
   };
@@ -67,12 +67,10 @@
 
     relay.exitPolicy = [ "reject *:*" ];
 
-    settings = {
-      ORPort = "auto";
-    };
+    settings = { ORPort = "auto"; };
   };
 
-  # Ensure /persist/tor exists and has correct perms before Tor starts
+  # Ensure /persist/tor exists before Tor starts
   systemd.services."tor.service".serviceConfig = {
     Requires     = [ "persist.mount" ];
     After        = [ "persist.mount" ];
@@ -98,7 +96,8 @@
       compatibility_level = "3.6";
     };
 
-    masterConfig = ''
+    # ← fixed attribute name
+    extraMasterConf = ''
       2525   inet  n  -  y  -  -  smtpd
       1587   inet  n  -  y  -  -  smtpd
     '';
@@ -112,6 +111,7 @@
     torsocks
     git
   ];
+}
 
   ############################################
   # 8. Optional extra hardening (commented)  #
