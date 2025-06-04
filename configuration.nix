@@ -1,7 +1,9 @@
-
 { config, pkgs, lib, ... }:
 
 {
+  ############################################
+  # 1. Base system & hardened profile        #
+  ############################################
   system.stateVersion = "25.05";
 
   imports = [
@@ -9,24 +11,43 @@
     <nixpkgs/nixos/modules/profiles/hardened.nix>
   ];
 
-  boot.loader.grub.enable  = true;
-  boot.loader.grub.version = 2;
-  boot.loader.grub.devices = [ "/dev/sda" ];
+  ############################################
+  # 2. Bootloader                            #
+  ############################################
+  boot.loader.grub = {
+    enable  = true;
+    version = 2;
+    devices = [ "/dev/sda" ];
+  };
 
+  ############################################
+  # 3. Filesystems                           #
+  ############################################
   fileSystems."/" = { options = [ "noatime" "discard" ]; };
 
   fileSystems."/var/lib/tor" = {
-    device = "/persist/tor";
-    fsType = "none";
+    device  = "/persist/tor";
+    fsType  = "none";
     options = [ "bind" ];
   };
 
-  networking.hostName = "mailstick-vbox";
-  networking.useDHCP  = true;
-  networking.firewall.enable          = true;
-  networking.firewall.allowedTCPPorts = [ ];
-  networking.firewall.allowedUDPPorts = [ ];
+  ############################################
+  # 4. Networking / Firewall                 #
+  ############################################
+  networking = {
+    hostName = "mailstick-vbox";
+    useDHCP  = true;
 
+    firewall = {
+      enable          = true;
+      allowedTCPPorts = [ 2525 1587 ];   # open local SMTP submission ports
+      allowedUDPPorts = [ ];
+    };
+  };
+
+  ############################################
+  # 5. Tor daemon + hidden service           #
+  ############################################
   services.tor = {
     enable        = true;
     client.enable = true;
@@ -38,22 +59,23 @@
       mailstick = {
         version = 3;
         map = [
-          { port = 25; target.addr = "127.0.0.1"; target.port = 2525; }
-	  { port = 587; target.addr = "127.0.0.1"; target.port = 1587; }
+          { port = 25;  target.addr = "127.0.0.1"; target.port = 2525; }
+          { port = 587; target.addr = "127.0.0.1"; target.port = 1587; }
         ];
       };
     };
 
-    relay.exitPolicy = [ "reject *:*" ]; 
-    
+    relay.exitPolicy = [ "reject *:*" ];
+
     settings = {
       ORPort = "auto";
     };
   };
 
+  # Ensure /persist/tor exists and has correct perms before Tor starts
   systemd.services."tor.service".serviceConfig = {
-    Requires = [ "persist.mount" ];
-    After    = [ "persist.mount" ];
+    Requires     = [ "persist.mount" ];
+    After        = [ "persist.mount" ];
     ExecStartPre = [
       "${pkgs.coreutils}/bin/mkdir -p /persist/tor/onion/mailstick"
       "${pkgs.coreutils}/bin/chown tor:tor /persist/tor"
@@ -62,19 +84,43 @@
     ];
   };
 
+  ############################################
+  # 6. Postfix – localhost-only relay        #
+  ############################################
+  services.postfix = {
+    enable = true;
 
-  #services.openssh.enable = false;
+    config = {
+      inet_interfaces     = "127.0.0.1";
+      myhostname          = "mailstick-vbox.local";
+      mydestination       = "localhost";
+      relayhost           = "";
+      compatibility_level = "3.6";
+    };
 
-  #systemd.coredump.enable = false;
-  #boot.kernel.sysctl = {
-  #  "kernel.kptr_restrict"          = 2;
-  #  "net.ipv4.conf.all.forwarding"  = 0;
-  #  "net.ipv4.icmp_echo_ignore_all" = 1;
-  #};
+    masterConfig = ''
+      2525   inet  n  -  y  -  -  smtpd
+      1587   inet  n  -  y  -  -  smtpd
+    '';
+  };
 
-  environment.systemPackages = with pkgs; [ 
+  ############################################
+  # 7. Extra packages                        #
+  ############################################
+  environment.systemPackages = with pkgs; [
     tor
     torsocks
-    git 
+    git
   ];
+
+  ############################################
+  # 8. Optional extra hardening (commented)  #
+  ############################################
+  # services.openssh.enable = false;
+  # systemd.coredump.enable = false;
+  # boot.kernel.sysctl = {
+  #   "kernel.kptr_restrict"          = 2;
+  #   "net.ipv4.conf.all.forwarding"  = 0;
+  #   "net.ipv4.icmp_echo_ignore_all" = 1;
+  # };
 }
