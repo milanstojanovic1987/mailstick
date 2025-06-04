@@ -111,7 +111,6 @@
     torsocks
     git
   ];
-}
 
   ############################################
   # 8. Optional extra hardening (commented)  #
