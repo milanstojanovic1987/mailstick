@@ -31,6 +31,11 @@
     options = [ "bind" ];
   };
 
+#  fileSystems."/persist" = {
+#    device = "/dev/disk/by-label/DATA";
+#    fsType = "ext4";
+#  };
+
   ############################################
   # 4. Networking / Firewall                 #
   ############################################
@@ -55,23 +60,36 @@
     relay.role    = "relay";
     enableGeoIP   = false;
 
-    relay.onionServices = {
-      mailstick = {
-        version = 3;
-        map = [
-          { port = 25;  target.addr = "127.0.0.1"; target.port = 2525; }
-          { port = 587; target.addr = "127.0.0.1"; target.port = 1587; }
-        ];
-      };
+    settings = {
+      HiddenServiceDir = "/persist/tor/onion/mailstick";
+      HiddenServiceVersion = 3;
+      HiddenServicePort = [ "25 127.0.0.1:25" ];
+      
+      ORPort = "auto";
+ 
     };
+
+#    relay.onionServices = {
+#      mailstick = {
+#        version = 3;
+#        map = [
+#          { port = 25;  target.addr = "127.0.0.1"; target.port = 2525; }
+#          { port = 587; target.addr = "127.0.0.1"; target.port = 1587; }
+#        ];
+#      };
+#    };
 
     relay.exitPolicy = [ "reject *:*" ];
 
-    settings = { ORPort = "auto"; };
   };
 
+
+
+
+
+
   # Ensure /persist/tor exists before Tor starts
-  systemd.services."tor.service".serviceConfig = {
+  systemd.services."tor".serviceConfig = {
     Requires     = [ "persist.mount" ];
     After        = [ "persist.mount" ];
     ExecStartPre = [
