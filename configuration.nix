@@ -23,18 +23,13 @@
   ############################################
   # 3. Filesystems                           #
   ############################################
-  # (root “/” is defined in hardware-configuration.nix)
   fileSystems."/" = { options = [ "noatime" "discard" ]; };
 
-  # Bind-mount /persist/tor → /var/lib/tor so Tor can use /var/lib/tor as usual
   fileSystems."/var/lib/tor" = {
     device  = "/persist/tor";
     fsType  = "none";
     options = [ "bind" ];
   };
-
-  # (We leave /persist itself to be mounted by hardware-configuration.nix,
-  # so we do NOT define fileSystems."/persist" here.)
 
   ############################################
   # 4. Networking / Firewall                 #
@@ -45,7 +40,6 @@
 
     firewall = {
       enable          = true;
-      # allow only the submission ports (2525, 1587) on localhost
       allowedTCPPorts = [ 2525 1587 ];
       allowedUDPPorts = [ ];
     };
@@ -68,19 +62,17 @@
       ORPort               = "auto";
     };
 
-    # We have removed any relay.onionServices block, so Tor will only run
-    # this one hidden service under /persist/tor/onion/mailstick.
     relay.exitPolicy = [ "reject *:*" ];
   };
 
-  # Ensure /persist/tor exists before Tor starts, and create the onion path
+  ############################################
+  # Systemd service corrections              #
+  ############################################
   systemd.services."tor".serviceConfig = {
     Requires     = [ "persist.mount" ];
     After        = [ "persist.mount" ];
     ExecStartPre = [
       "${pkgs.coreutils}/bin/mkdir -p /persist/tor/onion/mailstick"
-      "${pkgs.coreutils}/bin/chown tor:tor /persist/tor"
-      "${pkgs.coreutils}/bin/chown tor:tor /persist/tor/onion/mailstick"
       "${pkgs.coreutils}/bin/chmod 700 /persist/tor/onion/mailstick"
     ];
   };
@@ -113,15 +105,4 @@
     torsocks
     git
   ];
-
-  ############################################
-  # 8. Optional extra hardening (commented)  #
-  ############################################
-  # services.openssh.enable = false;
-  # systemd.coredump.enable = false;
-  # boot.kernel.sysctl = {
-  #   "kernel.kptr_restrict"          = 2;
-  #   "net.ipv4.conf.all.forwarding"  = 0;
-  #   "net.ipv4.icmp_echo_ignore_all" = 1;
-  # };
 }
