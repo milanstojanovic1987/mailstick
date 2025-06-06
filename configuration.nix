@@ -23,18 +23,18 @@
   ############################################
   # 3. Filesystems                           #
   ############################################
+  # (root “/” is defined in hardware-configuration.nix)
   fileSystems."/" = { options = [ "noatime" "discard" ]; };
 
+  # Bind-mount /persist/tor → /var/lib/tor so Tor can use /var/lib/tor as usual
   fileSystems."/var/lib/tor" = {
     device  = "/persist/tor";
     fsType  = "none";
     options = [ "bind" ];
   };
 
-#  fileSystems."/persist" = {
-#    device = "/dev/disk/by-label/DATA";
-#    fsType = "ext4";
-#  };
+  # (We leave /persist itself to be mounted by hardware-configuration.nix,
+  # so we do NOT define fileSystems."/persist" here.)
 
   ############################################
   # 4. Networking / Firewall                 #
@@ -45,7 +45,8 @@
 
     firewall = {
       enable          = true;
-      allowedTCPPorts = [ 2525 1587 ];   # local SMTP submission
+      # allow only the submission ports (2525, 1587) on localhost
+      allowedTCPPorts = [ 2525 1587 ];
       allowedUDPPorts = [ ];
     };
   };
@@ -61,34 +62,18 @@
     enableGeoIP   = false;
 
     settings = {
-      HiddenServiceDir = "/persist/tor/onion/mailstick";
+      HiddenServiceDir     = "/persist/tor/onion/mailstick";
       HiddenServiceVersion = 3;
-      HiddenServicePort = [ "25 127.0.0.1:25" ];
-      
-      ORPort = "auto";
- 
+      HiddenServicePort    = [ "25 127.0.0.1:25" ];
+      ORPort               = "auto";
     };
 
-#    relay.onionServices = {
-#      mailstick = {
-#        version = 3;
-#        map = [
-#          { port = 25;  target.addr = "127.0.0.1"; target.port = 2525; }
-#          { port = 587; target.addr = "127.0.0.1"; target.port = 1587; }
-#        ];
-#      };
-#    };
-
+    # We have removed any relay.onionServices block, so Tor will only run
+    # this one hidden service under /persist/tor/onion/mailstick.
     relay.exitPolicy = [ "reject *:*" ];
-
   };
 
-
-
-
-
-
-  # Ensure /persist/tor exists before Tor starts
+  # Ensure /persist/tor exists before Tor starts, and create the onion path
   systemd.services."tor".serviceConfig = {
     Requires     = [ "persist.mount" ];
     After        = [ "persist.mount" ];
@@ -114,7 +99,6 @@
       compatibility_level = "3.6";
     };
 
-    # ← fixed attribute name
     extraMasterConf = ''
       2525   inet  n  -  y  -  -  smtpd
       1587   inet  n  -  y  -  -  smtpd
